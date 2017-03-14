@@ -47,11 +47,12 @@ $(document).ready(function() {
 				} else {
 					row.append("<th>" + stringifyTime(firstDepMinutes) + "</th>");
 					var depMinFromNow = firstDepMinutes - currentMinutes;
-					row.append("<th>" + depMinFromNow + "</th>");				}
+					row.append("<th>" + depMinFromNow + "</th>");
+				}
 			};
 			this.allTrains.forEach(function(train) {
 				console.log(train);
-				var newRow = $("<tr></tr>");
+				var newRow = $("<tr class='active'></tr>");
 				populateFirstThreeColumns(train, newRow);
 				populateNextArrivalsColumns(train, newRow);
 				$("#train-schedule").children("tbody").append(newRow);
@@ -84,8 +85,11 @@ $(document).ready(function() {
 		var hours = hours % 24;
 		var minutesLeft = minutes % 60;
 		var stringifiedTime = hours + ":" + minutesLeft;
-		if (stringifiedTime.length < 5) {
-			return stringifiedTime + "0";
+		if ((hours + "").length < 2) {
+			stringifiedTime = "0" + stringifiedTime;
+		}
+		if ((minutesLeft + "").length < 2) {
+			stringifiedTime = stringifiedTime + "0"; 
 		}
 		return stringifiedTime;
 	};

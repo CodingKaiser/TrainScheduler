@@ -1,0 +1,8 @@
+body, html {
+	min-height: 100vh;
+}
+
+body {
+	background-image: url('../images/cartographer.png');
+	background-repeat: repeat;
+}
