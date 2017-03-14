@@ -17,34 +17,43 @@ $(document).ready(function() {
 
 		start: function() {
 			console.log("Populating...");
-			if (this.allTrains.length) {
-				this._populateTable();
+			if (trainApp.allTrains.length) {
+				trainApp._populateTable();
 			} else {
-				this._displayNoTrainsNotice();
+				trainApp._displayNoTrainsNotice();
 			}
 		},
 
 		_populateTable: function() {
 			this._clearTable();
+			function populateFirstThreeColumns(train, row) {
+				row.append("<th>" + train.name + "</th>");
+				row.append("<th>" + train.destination + "</th>");
+				row.append("<th>" + train.frequency + "</th>");
+			};
+			function populateNextArrivalsColumns(train, row) {
+				var firstDepMinutes = parseMilitaryTime(train.first);
+				var frequency = train.frequency;
+				var currentMinutes = getCurrentTimeInMinutes();
+				var timeDifference = currentMinutes - firstDepMinutes;
+				if (timeDifference >= 0) {
+					var multiplier = Math.ceil(timeDifference / parseInt(train.frequency));
+					var nextDeparture = (multiplier * frequency) + firstDepMinutes;
+					console.log(currentMinutes);
+					console.log(nextDeparture);
+					row.append("<th>" + stringifyTime(nextDeparture) + "</th>");
+					var depMinFromNow = nextDeparture - currentMinutes;
+					row.append("<th>" + depMinFromNow + "</th>");
+				} else {
+					row.append("<th>" + stringifyTime(firstDepMinutes) + "</th>");
+					var depMinFromNow = firstDepMinutes - currentMinutes;
+					row.append("<th>" + depMinFromNow + "</th>");				}
+			};
 			this.allTrains.forEach(function(train) {
 				console.log(train);
 				var newRow = $("<tr></tr>");
-				newRow.append("<th>" + train.name + "</th>");
-				newRow.append("<th>" + train.destination + "</th>");
-				newRow.append("<th>" + train.frequency + "</th>");
-				var firstDepMinutes = parseMilitaryTime(train.first);
-				var currentTime = new Date($.now());
-				var currentMinutes = (currentTime.getHours() * 60) + currentTime.getMinutes();
-				var timeDifference = currentMinutes - firstDepMinutes;
-				if (timeDifference >= 0) {
-					var fact = Math.ceil(timeDifference / parseInt(train.frequency));
-					var nextDeparture = (fact * parseInt(train.frequency)) + firstDepMinutes;
-					console.log(currentMinutes);
-					console.log(nextDeparture);
-					newRow.append("<th>" + stringifyTime(nextDeparture));
-				} else {
-
-				}
+				populateFirstThreeColumns(train, newRow);
+				populateNextArrivalsColumns(train, newRow);
 				$("#train-schedule").children("tbody").append(newRow);
 			});
 		},
@@ -60,16 +69,26 @@ $(document).ready(function() {
 		},
 	};
 
+	function getCurrentTimeInMinutes() {
+		var currentTime = new Date($.now());
+		return (currentTime.getHours() * 60) + currentTime.getMinutes();
+	};
+
 	function parseMilitaryTime(t) {
 		var tSplit = t.split(":");
 		return (parseInt(tSplit[0]) * 60) + parseInt(tSplit[1]);
 	};
 
 	function stringifyTime(minutes) {
-		var hours = Math.floor(t / 60);
-		var minutes = t % 60;
-		return hours + ":" + minutes;
-	}
+		var hours = Math.floor(minutes / 60);
+		var hours = hours % 24;
+		var minutesLeft = minutes % 60;
+		var stringifiedTime = hours + ":" + minutesLeft;
+		if (stringifiedTime.length < 5) {
+			return stringifiedTime + "0";
+		}
+		return stringifiedTime;
+	};
 
 	database.ref().on("value", function(snapshot) {
 		console.log("Data has been updated");
@@ -90,11 +109,13 @@ $(document).ready(function() {
 			name: $("#name-input").val(),
 			destination: $("#dest-input").val(),
 			first: $("#time-input").val(),
-			frequency: $("#freq-input").val(),
+			frequency: parseInt($("#freq-input").val()),
 		};
 		trainApp.allTrains.push(newTrainLine);
 		database.ref().set({
 			trains: trainApp.allTrains,
 		});
 	});
+
+	setInterval(trainApp.start, 60000);
 });
