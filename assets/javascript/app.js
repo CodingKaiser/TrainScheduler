@@ -139,5 +139,11 @@ $(document).ready(function() {
 		});
 	});
 
+	$("#train-schedule").on("click", ".rm-row", function() {
+		console.log("This button works");
+		var rowId = $(this).parent().parent().attr("id");
+		database.ref("trains").child(rowId).remove();
+	});
+
 	setInterval(trainApp.start, 60000);
 });
