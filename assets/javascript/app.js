@@ -46,23 +46,6 @@ $(document).ready(function() {
 					var depMinFromNow = moment(train.first).diff(moment(), "minutes");
 					row.append("<th>" + depMinFromNow + "</th>");
     			}
-				// var firstDepMinutes = parseMilitaryTime(train.first);
-				// var frequency = train.frequency;
-				// var currentMinutes = getCurrentTimeInMinutes();
-				// var timeDifference = currentMinutes - firstDepMinutes;
-				// if (timeDifference >= 0) {
-				// 	var multiplier = Math.ceil(timeDifference / parseInt(train.frequency));
-				// 	var nextDeparture = (multiplier * frequency) + firstDepMinutes;
-				// 	console.log(currentMinutes);
-				// 	console.log(nextDeparture);
-				// 	row.append("<th>" + stringifyTime(nextDeparture) + "</th>");
-				// 	var depMinFromNow = nextDeparture - currentMinutes;
-				// 	row.append("<th>" + depMinFromNow + "</th>");
-				// } else {
-				// 	row.append("<th>" + stringifyTime(firstDepMinutes) + "</th>");
-				// 	var depMinFromNow = firstDepMinutes - currentMinutes;
-				// 	row.append("<th>" + depMinFromNow + "</th>");
-				// }
 			};
 			this.allTrains.forEach(function(train) {
 				console.log(train);
@@ -83,29 +66,6 @@ $(document).ready(function() {
 			$("#train-schedule").children().children().slice(1).remove();
 		},
 	};
-
-	// function getCurrentTimeInMinutes() {
-	// 	var currentTime = new Date($.now());
-	// 	return (currentTime.getHours() * 60) + currentTime.getMinutes();
-	// };
-
-	// function parseMilitaryTime(t) {
-	// 	var tSplit = t.split(":");
-	// 	return (parseInt(tSplit[0]) * 60) + parseInt(tSplit[1]);
-	// };
-
-	// function stringifyTime(minutes) {
-	// 	var hours = Math.floor(minutes / 60);
-	// 	var minutesLeft = minutes % 60;
-	// 	var stringifiedTime = hours + ":" + minutesLeft;
-	// 	if ((hours + "").length < 2) {
-	// 		stringifiedTime = "0" + stringifiedTime;
-	// 	}
-	// 	if ((minutesLeft + "").length < 2) {
-	// 		stringifiedTime = stringifiedTime + "0"; 
-	// 	}
-	// 	return stringifiedTime;
-	// };
 
 	database.ref().on("value", function(snapshot) {
 		console.log("Data has been updated");
