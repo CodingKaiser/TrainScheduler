@@ -8,6 +8,8 @@ $(document).ready(function() {
 		messagingSenderId: "1059256690977"
 	};
 
+	var refreshDepartures;
+
 	firebase.initializeApp(config);
 
 	var database = firebase.database();
@@ -26,11 +28,14 @@ $(document).ready(function() {
 
 		_populateTable: function() {
 			this._clearTable();
+			// populate name, destination, frequency in table
 			function populateFirstThreeColumns(train, row) {
-				row.append("<th><button type='button' class='btn btn-default btn-sm rm-row'><span class='glyphicon glyphicon-remove' aria-hidden='true'></span></button> " + train.name + "</th>");
+				row.append("<th><button type='button' class='btn btn-default btn-sm rm-row'><span class='glyphicon glyphicon-remove' aria-hidden='true'></span></button><button type='button' class='btn btn-default btn-sm edit-row'><span class='glyphicon glyphicon-edit' aria-hidden='true'></span></button></th>")
+				row.append("<th>" + train.name + "</th>");
 				row.append("<th>" + train.destination + "</th>");
 				row.append("<th>" + train.frequency + "</th>");
 			};
+			// calculate time to arrival and populate table with result
 			function populateNextArrivalsColumns(train, row) {
 				console.log(train.first);
     			var timeDifference = moment().diff(moment(train.first), "minutes");
@@ -47,6 +52,7 @@ $(document).ready(function() {
 					row.append("<th>" + depMinFromNow + "</th>");
     			}
 			};
+			// loop through all trains in database and assign a row to each
 			this.allTrains.forEach(function(train) {
 				console.log(train);
 				var newRow = $("<tr id='" + train.idKey + "'class='active'></tr>");
@@ -57,13 +63,50 @@ $(document).ready(function() {
 		},
 
 		_displayNoTrainsNotice: function() {
+			// always clear table first
 			this._clearTable();
-			$("#train-schedule").first().append("<tr><th colspan='5' class='text-center'>" + 
+			// if no trains in databse, display placeholder notice
+			$("#train-schedule").first().append("<tr><th colspan='6' class='text-center'>" + 
 										"<strong>No contents</strong></th></tr>");
 		},
 
 		_clearTable: function() {
 			$("#train-schedule").children().children().slice(1).remove();
+		},
+
+		_editRow: function() {
+			var row = $(this).parent().parent();
+			// reassign click listener on button
+			$(this).removeClass("edit-row");
+			$(this).addClass("save-row");
+			// swap out glyphicon
+			$(this).children("span").removeClass("glyphicon-edit");
+			$(this).children("span").addClass("glyphicon-floppy-disk");
+			// allow for editing of first three columns
+			row.children("th").slice(1, 4).attr("contenteditable", "true");
+			clearInterval(refreshDepartures); // prevent refresh while editing
+			console.log("entering edit mode");
+		},
+
+		_saveChanges: function() {
+			var row = $(this).parent().parent();
+			// reassign click listener on button
+			$(this).removeClass("save-row");
+			$(this).addClass("edit-row");
+			// swap out glyphicon
+			$(this).children("span").removeClass("glyphicon-floppy-disk");
+			$(this).children("span").addClass("glyphicon-edit");
+			var rowId = row.attr("id");
+			// update train with corresponding id with new parameters
+			database.ref("trains").child(rowId).update({
+				name: row.children("th").eq(1).text(),
+				destination: row.children("th").eq(2).text(),
+				frequency: row.children("th").eq(3).text(),
+			});
+			// prevent further editing of table cells
+			row.children("th").slice(1, 4).attr("contenteditable", "false");
+			refreshDepartures = setInterval(trainApp.start, 60000); // restart timer
+			console.log("Saving changes");
 		},
 	};
 
@@ -82,14 +125,7 @@ $(document).ready(function() {
 		console.log(event);
 		event.preventDefault();
 		var trainLineObj = database.ref("trains").push();
-		var newTrainLine = {
-			idKey: trainLineObj.key,
-			name: $("#name-input").val(),
-			destination: $("#dest-input").val(),
-			first: moment().format("YYYY-MM-DD") + " " + $("#time-input").val(),
-			frequency: parseInt($("#freq-input").val()),
-		};
-		trainApp.allTrains.push(newTrainLine);
+		// reset 
 		trainLineObj.set({
 			idKey: trainLineObj.key,
 			name: $("#name-input").val(),
@@ -100,10 +136,13 @@ $(document).ready(function() {
 	});
 
 	$("#train-schedule").on("click", ".rm-row", function() {
-		console.log("This button works");
 		var rowId = $(this).parent().parent().attr("id");
 		database.ref("trains").child(rowId).remove();
 	});
 
-	setInterval(trainApp.start, 60000);
+	$("#train-schedule").on("click", ".edit-row", trainApp._editRow);
+
+	$("#train-schedule").on("click", ".save-row", trainApp._saveChanges);
+
+	refreshDepartures = setInterval(trainApp.start, 60000);
 });
