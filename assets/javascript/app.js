@@ -84,6 +84,7 @@ $(document).ready(function() {
 			$(this).children("span").addClass("glyphicon-floppy-disk");
 			// allow for editing of first three columns
 			row.children("th").slice(1, 4).attr("contenteditable", "true");
+			row.children("th").eq(3).addClass("only-numbers");
 			clearInterval(refreshDepartures); // prevent refresh while editing
 			console.log("entering edit mode");
 		},
@@ -144,5 +145,12 @@ $(document).ready(function() {
 
 	$("#train-schedule").on("click", ".save-row", trainApp._saveChanges);
 
+	$("#train-schedule").on("keydown", ".only-numbers", function(event) {
+		// Only let user press backspace or numbers
+        if (event.shiftKey || ((event.keyCode > 8 && event.keyCode < 48) || 
+        	event.keyCode > 57) && (event.keyCode < 96 || event.keyCode > 105 )) {
+            event.preventDefault();
+        }
+    });
 	refreshDepartures = setInterval(trainApp.start, 60000);
 });
